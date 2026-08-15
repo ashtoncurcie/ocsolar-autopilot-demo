@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Autopilot Test Drive</title>
+<style>
+  :root {
+    --paper: #F5F4F0;
+    --panel: #FFFFFF;
+    --panel-2: #EFEDE8;
+    --ink: #1E2833;
+    --muted: #5B6B7A;
+    --faint: #8494A3;
+    --line: #DCD9D1;
+    --copper: #B45418;
+    --copper-ink: #8F3F0F;
+    --copper-soft: #F4E3D4;
+    --go: #2E7D4F;
+    --go-bg: #E7F2EB;
+    --go-line: #BCDCC8;
+    --hold: #9A6A12;
+    --hold-bg: #F7EFDD;
+    --hold-line: #E4D2A8;
+    --stop: #B3362C;
+    --stop-bg: #F9E9E7;
+    --stop-line: #EBC5C0;
+    --rail-track: #E3E1DA;
+    --shadow: 0 1px 2px rgba(30, 40, 51, 0.06), 0 4px 14px rgba(30, 40, 51, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14181D;
+      --panel: #1C232B;
+      --panel-2: #232B34;
+      --ink: #E6E9EC;
+      --muted: #97A3AE;
+      --faint: #6E7C89;
+      --line: #2C353F;
+      --copper: #E0803D;
+      --copper-ink: #EFA06A;
+      --copper-soft: #33261B;
+      --go: #57B380;
+      --go-bg: #1C2F25;
+      --go-line: #2E4A3A;
+      --hold: #D9A441;
+      --hold-bg: #322A18;
+      --hold-line: #4E4126;
+      --stop: #E06A5E;
+      --stop-bg: #33201D;
+      --stop-line: #52302B;
+      --rail-track: #2A323C;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #14181D;
+    --panel: #1C232B;
+    --panel-2: #232B34;
+    --ink: #E6E9EC;
+    --muted: #97A3AE;
+    --faint: #6E7C89;
+    --line: #2C353F;
+    --copper: #E0803D;
+    --copper-ink: #EFA06A;
+    --copper-soft: #33261B;
+    --go: #57B380;
+    --go-bg: #1C2F25;
+    --go-line: #2E4A3A;
+    --hold: #D9A441;
+    --hold-bg: #322A18;
+    --hold-line: #4E4126;
+    --stop: #E06A5E;
+    --stop-bg: #33201D;
+    --stop-line: #52302B;
+    --rail-track: #2A323C;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 28px 20px 64px;
+  }
+  .mono { font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; }
+
+  /* ---------- header ---------- */
+  .masthead { margin-bottom: 18px; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--copper);
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 34px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .masthead p.sub { color: var(--muted); margin: 0; max-width: 62ch; }
+  .provenance {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 7px 12px;
+    background: var(--copper-soft);
+    border: 1px solid var(--copper);
+    border-radius: 4px;
+    color: var(--copper-ink);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .provenance .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--copper); flex: none; }
+
+  /* ---------- scenario chips ---------- */
+  .scenarios { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 22px; }
+  .scenarios .lbl { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 600; align-self: center; margin-right: 4px; }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: inherit;
+  }
+  .chip:hover { border-color: var(--copper); }
+  .chip:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid var(--copper);
+    outline-offset: 2px;
+  }
+  .chip.active { border-color: var(--copper); background: var(--copper-soft); color: var(--copper-ink); }
+
+  /* ---------- layout ---------- */
+  .cols { display: grid; grid-template-columns: 400px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 940px) { .cols { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card + .card { margin-top: 18px; }
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card-head .step {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--copper);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .card-head h2 { font-size: 16px; font-weight: 600; margin: 0; }
+  .card-head .note { margin-left: auto; font-size: 12.5px; color: var(--faint); }
+  .card-body { padding: 16px 18px; }
+
+  /* ---------- form ---------- */
+  fieldset { border: 0; margin: 0 0 4px; padding: 0; }
+  legend {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 0 8px;
+  }
+  .field { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+  .field:last-child { border-bottom: 0; }
+  .field > label { font-size: 14px; color: var(--ink); }
+  .field .hintline { grid-column: 1 / -1; font-size: 12px; color: var(--faint); margin-top: -4px; }
+  select, input[type="number"] {
+    font: inherit;
+    font-size: 13.5px;
+    color: var(--ink);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px 8px;
+    min-width: 150px;
+  }
+  input[type="number"] { width: 110px; min-width: 0; text-align: right; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button {
+    font: inherit; font-size: 13px; font-weight: 500;
+    background: var(--panel-2); color: var(--muted);
+    border: 0; padding: 6px 13px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button.on { background: var(--copper); color: #fff; }
+  :root[data-theme="dark"] .seg button.on, :root:not([data-theme="light"]) .seg button.on { color: #14181D; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .seg button.on { color: #fff; } }
+
+  .quote-pair { display: flex; gap: 8px; align-items: center; }
+
+  details.admin { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+  details.admin summary {
+    cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted);
+    list-style: none; display: flex; align-items: center; gap: 8px;
+  }
+  details.admin summary::before { content: "▸"; transition: transform 0.15s; color: var(--copper); }
+  details.admin[open] summary::before { transform: rotate(90deg); }
+  details.admin .field > label { color: var(--muted); font-size: 13.5px; }
+
+  .complete-bar { padding: 14px 18px; border-top: 1px solid var(--line); background: var(--panel-2); }
+  .complete-btn {
+    width: 100%;
+    font: inherit; font-size: 15px; font-weight: 600;
+    background: var(--copper); color: #fff;
+    border: 0; border-radius: 8px; padding: 12px 16px; cursor: pointer;
+  }
+  .complete-btn:hover { filter: brightness(1.06); }
+  .complete-hint { font-size: 12px; color: var(--faint); text-align: center; margin: 8px 0 0; }
+
+  /* ---------- fired rules / scope ---------- */
+  .rule-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .rule-chip {
+    font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--copper-soft); color: var(--copper-ink);
+    border: 1px solid var(--copper);
+  }
+  .rule-chip.flag { background: var(--stop-bg); color: var(--stop); border-color: var(--stop-line); }
+  .rule-chip.warnf { background: var(--hold-bg); color: var(--hold); border-color: var(--hold-line); }
+  .rule-chips .none { font-size: 13px; color: var(--faint); }
+
+  .tablewrap { overflow-x: auto; }
+  table.scope { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  table.scope th {
+    text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--faint); font-weight: 600; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line);
+  }
+  table.scope td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.scope tr:last-child td { border-bottom: 0; }
+  table.scope td.r, table.scope th.r { text-align: right; }
+  .via {
+    display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--copper-ink); background: var(--copper-soft);
+    border-radius: 3px; padding: 1px 6px; margin-left: 8px; vertical-align: 1px;
+  }
+  .cost-na { color: var(--stop); font-weight: 600; }
+
+  .callout { border-radius: 8px; padding: 10px 14px; font-size: 13.5px; margin-top: 12px; }
+  .callout.warn { background: var(--hold-bg); border: 1px solid var(--hold-line); color: var(--ink); }
+  .callout.bad { background: var(--stop-bg); border: 1px solid var(--stop-line); color: var(--ink); }
+  .callout strong { font-weight: 650; }
+  .callout ul { margin: 6px 0 0; padding-left: 18px; }
+
+  /* ---------- tiles ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .tile { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .tile .t-label { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--faint); font-weight: 600; margin-bottom: 3px; }
+  .tile .t-value { font-size: 21px; font-weight: 650; letter-spacing: -0.01em; }
+  .tile .t-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .tile.delta-pos .t-value { color: var(--hold); }
+  .tile.delta-neg .t-value { color: var(--go); }
+
+  /* ---------- margin rail ---------- */
+  .rail-block { margin: 6px 0 4px; }
+  .rail-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 26px; }
+  .rail-title .rt { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .rail-title .rv { font-size: 15px; font-weight: 700; }
+  .rail { position: relative; height: 14px; background: var(--rail-track); border-radius: 7px; }
+  .rail-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; background: var(--go); transition: width 0.35s ease; min-width: 4px; }
+  .rail-fill.hold { background: var(--hold); }
+  .rail-fill.stop { background: var(--stop); }
+  .rail-tick { position: absolute; top: -7px; bottom: -7px; width: 2px; background: var(--ink); opacity: 0.55; }
+  .rail-tick-label { position: absolute; top: -24px; transform: translateX(-50%); font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .rail-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 6px; }
+  .rail-caption { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+
+  /* ---------- verdict ---------- */
+  .verdict { border-radius: 10px; border: 1px solid; padding: 16px 18px; }
+  .verdict.go { background: var(--go-bg); border-color: var(--go-line); }
+  .verdict.hold { background: var(--hold-bg); border-color: var(--hold-line); }
+  .verdict-line { display: flex; align-items: center; gap: 10px; }
+  .verdict-badge {
+    flex: none; width: 34px; height: 34px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 18px; font-weight: 800; color: #fff;
+  }
+  .verdict.go .verdict-badge { background: var(--go); }
+  .verdict.hold .verdict-badge { background: var(--hold); }
+  .verdict-line h3 { margin: 0; font-size: 17px; font-weight: 650; }
+  .verdict.go .verdict-line h3 { color: var(--go); }
+  .verdict.hold .verdict-line h3 { color: var(--hold); }
+  .verdict-line .gate-tag { margin-left: auto; font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .verdict ul.reasons { margin: 12px 0 0; padding-left: 20px; font-size: 14px; }
+  .verdict ul.reasons li { margin: 4px 0; }
+  .verdict .engine-note { font-size: 11.5px; color: var(--faint); margin-top: 12px; }
+
+  /* ---------- messages ---------- */
+  .out-grid { display: grid; gap: 14px; }
+  .msg-card { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .msg-head { display: flex; gap: 8px; align-items: center; background: var(--panel-2); border-bottom: 1px solid var(--line); padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .msg-head .to { margin-left: auto; font-weight: 500; color: var(--faint); }
+  .msg-body { padding: 12px 14px; font-size: 13.5px; }
+  .msg-body .subject { font-weight: 650; margin-bottom: 6px; }
+  .msg-body p { margin: 0 0 8px; }
+  .msg-body p:last-child { margin-bottom: 0; }
+  .sms-bubble {
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 14px 14px 14px 4px; padding: 10px 14px; font-size: 13.5px; max-width: 52ch;
+  }
+  .mini-numbers { border-collapse: collapse; font-size: 13px; margin: 8px 0; }
+  .mini-numbers td { padding: 3px 14px 3px 0; }
+  .mini-numbers td:last-child { font-weight: 650; text-align: right; }
+  .todo-card { display: flex; gap: 10px; align-items: flex-start; }
+  .todo-check { flex: none; width: 18px; height: 18px; border: 2px solid var(--hold); border-radius: 4px; margin-top: 2px; }
+  .todo-card .t-title { font-weight: 650; font-size: 14px; }
+  .todo-card .t-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .cadence-note { font-size: 12.5px; color: var(--muted); background: var(--panel-2); border: 1px dashed var(--line); border-radius: 6px; padding: 8px 12px; }
+  .cadence-note code { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12px; color: var(--copper-ink); }
+
+  footer.colophon { margin-top: 26px; font-size: 12.5px; color: var(--faint); max-width: 78ch; }
+  footer.colophon code { font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 11.5px; }
+
+  .flash { animation: flash-bg 0.7s ease; }
+  @keyframes flash-bg { 0% { box-shadow: 0 0 0 3px var(--copper); } 100% { box-shadow: var(--shadow); } }
+  @media (prefers-reduced-motion: reduce) {
+    .rail-fill { transition: none; }
+    .flash { animation: none; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">OC Solar · NEXUS</p>
+    <h1>Site Audit Autopilot — test drive</h1>
+    <p class="sub">
+      Play the site auditor: fill the Project Design Meeting capture on the left, mark it complete, and watch the
+      autopilot build the scope of work, price it, and make the go / sales-review call.
+    </p>
+    <p class="provenance"><span class="dot"></span>Live code: this page runs the exact engine and mapping rules shipped to NEXUS — every number and reason below comes from the production logic, not a mock.</p>
+  </header>
+
+  <div class="scenarios" id="scenarios">
+    <span class="lbl">Scenarios</span>
+    <button class="chip" data-scenario="walkthrough">The $25k walkthrough</button>
+    <button class="chip" data-scenario="thin">Thin margin → sales call</button>
+    <button class="chip" data-scenario="redflag">Red-flag roof</button>
+    <button class="chip" data-scenario="conduit">Custom conduit ask</button>
+    <button class="chip" data-scenario="unmapped">Finding without a price</button>
+    <button class="chip" data-scenario="highvalue">Big battery deal (Gate 2)</button>
+    <button class="chip" data-scenario="pcsswap">Wrong utility for collar</button>
+  </div>
+
+  <div class="cols">
+    <!-- ======================= LEFT: the capture ======================= -->
+    <div>
+      <div class="card" id="captureCard">
+        <div class="card-head">
+          <span class="step">Capture</span>
+          <h2>Project Design Meeting</h2>
+          <span class="note">what the auditor fills on site</span>
+        </div>
+        <div class="card-body">
+          <fieldset>
+            <legend>Electrical</legend>
+            <div class="field">
+              <label for="f-brand">Main service panel brand</label>
+              <select id="f-brand">
+                <option>Square D</option>
+                <option>Eaton</option>
+                <option>Siemens</option>
+                <option>Challenger</option>
+                <option>Zinsco</option>
+                <option>Federal Pacific</option>
+                <option>Sylvania</option>
+                <option>Pushmatic / Bulldog</option>
+              </select>
+              <div class="hintline">The auditor records the brand as a fact — there is no "MPU required?" question (the finance company usually dictates that). Zinsco / Federal Pacific / Sylvania / Pushmatic-Bulldog auto-add the Main Panel Upgrade; Challenger deliberately does not.</div>
+            </div>
+            <div class="field">
+              <label for="f-bus">Bus bar size (A)</label>
+              <input id="f-bus" type="number" step="25" min="60" max="400" value="200" />
+            </div>
+            <div class="field">
+              <label for="f-feed">Utility feed</label>
+              <select id="f-feed"><option>Overhead</option><option>Underground</option></select>
+            </div>
+            <div class="field">
+              <label for="f-conduit">Custom conduit run requested?</label>
+              <span class="seg" id="f-conduit" role="group" aria-label="Custom conduit run requested">
+                <button data-v="Yes">Yes</button><button data-v="No">No</button>
+              </span>
+              <div class="hintline">Bespoke routing the catalog can't price — hard stop, and no approval price gets quoted.</div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Roof</legend>
+            <div class="field">
+              <label for="f-roof">Primary roof type</label>
+              <select id="f-roof">
+                <option>Composition Shingle</option>
+                <option>Tile (Concrete)</option>
+                <option>Metal — Standing Seam</option>
+                <option>Flat / Torch Down</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-stories">Roof height (stories)</label>
+              <span class="seg" id="f-stories" role="group" aria-label="Stories">
+                <button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button>
+              </span>
+            </div>
+            <div class="field">
+              <label for="f-cond">Roof condition</label>
+              <select id="f-cond">
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor — needs replacement</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-underlay">Underlayment / surface condition</label>
+              <select id="f-underlay">
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor — brittle &amp; torn</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-multi">Multiple roof types?</label>
+              <span class="seg" id="f-multi" role="group" aria-label="Multiple roof types">
+                <button data-v="Yes">Yes</button><button data-v="No">No</button>
+              </span>
+            </div>
+            <div class="field">
+              <label for="f-struct">Structural concerns?</label>
+              <span class="seg" id="f-struct" role="group" aria-label="Structural concerns">
+                <button data-v="Yes">Yes</button><button data-v="No">No</button>
+              </span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>System confirmed on site</legend>
+            <div class="field">
+              <label for="f-modules">Module count (Q.PEAK 400 W)</label>
+              <input id="f-modules" type="number" min="8" max="80" value="25" />
+            </div>
+            <div class="field">
+              <label for="f-batt">Battery</label>
+              <select id="f-batt"><option>None</option><option>Tesla Powerwall 3</option></select>
+            </div>
+            <div class="field">
+              <label for="f-battqty">Battery quantity</label>
+              <input id="f-battqty" type="number" min="1" max="4" value="1" />
+            </div>
+            <div class="field">
+              <label for="f-battdist">Battery distance from MSP (ft)</label>
+              <input id="f-battdist" type="number" min="0" max="300" value="20" />
+              <div class="hintline">Strictly over 50 ft adds the Battery Distance adder.</div>
+            </div>
+            <div class="field">
+              <label for="f-utility">Utility / jurisdiction</label>
+              <select id="f-utility">
+                <option value="compatible">SCE — meter collar OK</option>
+                <option value="incompatible">LADWP — meter collar NOT compatible</option>
+              </select>
+              <div class="hintline">Drives the template's read-only warning field — exactly how the real capture surfaces it.</div>
+            </div>
+            <div class="field" id="collarWarningRow" style="display:none;border:1px solid var(--stop-line);background:var(--stop-bg);border-radius:6px;padding:8px 10px;">
+              <span style="font-size:12.5px;font-weight:700;color:var(--stop);">⚠ WARNING: METER COLLAR NOT COMPATIBLE</span>
+              <span class="hintline" style="margin:0;">Read-only warning field — its presence in the completed capture triggers the PCS swap when a battery is on the deal.</span>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Website quote (already on the project)</legend>
+            <div class="field">
+              <label for="f-pay">Payment method quoted</label>
+              <select id="f-pay"><option value="cash">Cash</option><option value="prepaid">Prepaid PPA</option><option value="loan">Loan (monthly only)</option></select>
+              <div class="hintline">Loan/PPA quotes are monthly figures — no dollar quote exists, so the gate falls back to the computed price.</div>
+            </div>
+            <div class="field">
+              <label>Quote range ($)</label>
+              <span class="quote-pair">
+                <input id="f-qlow" type="number" step="500" min="0" value="24000" aria-label="Quote low" />
+                <span style="color:var(--faint)">–</span>
+                <input id="f-qhigh" type="number" step="500" min="0" value="26000" aria-label="Quote high" />
+              </span>
+            </div>
+          </fieldset>
+
+          <details class="admin">
+            <summary>Admin settings — approval gates (live in NEXUS too)</summary>
+            <div class="field">
+              <label for="s-auto">Gate 1 · auto-approve margin ≥ (%)</label>
+              <input id="s-auto" type="number" min="0" max="95" value="35" />
+            </div>
+            <div class="field">
+              <label for="s-alt">Gate 2 · margin floor > (%)</label>
+              <input id="s-alt" type="number" min="0" max="95" value="30" />
+            </div>
+            <div class="field">
+              <label for="s-gp">Gate 2 · gross profit > ($)</label>
+              <input id="s-gp" type="number" min="0" step="1000" value="20000" />
+            </div>
+            <div class="field">
+              <label for="s-basis">Margin measured against</label>
+              <select id="s-basis">
+                <option value="quoted">Website quote (honor the quote)</option>
+                <option value="computed">Freshly priced scope</option>
+              </select>
+            </div>
+          </details>
+        </div>
+        <div class="complete-bar">
+          <button class="complete-btn" id="runBtn">Mark capture Complete → run Autopilot</button>
+          <p class="complete-hint">Recomputes live as you edit, too — the button is the moment NEXUS runs it for real.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================= RIGHT: the pipeline ======================= -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <span class="step">Step 1</span>
+          <h2>Audit answers → scope of work</h2>
+          <span class="note">rules file, reviewable data — not code</span>
+        </div>
+        <div class="card-body">
+          <div class="rule-chips" id="ruleChips"></div>
+          <div class="tablewrap">
+            <table class="scope" aria-label="Scope of work">
+              <thead>
+                <tr><th>Line item</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Cost</th></tr>
+              </thead>
+              <tbody id="scopeRows"></tbody>
+            </table>
+          </div>
+          <div id="scopeCallouts"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="step">Step 2</span>
+          <h2>Pricing vs. the quote</h2>
+          <span class="note">catalog prices &amp; costs, PM-card parity</span>
+        </div>
+        <div class="card-body">
+          <div class="tiles" id="tiles"></div>
+          <div class="rail-block">
+            <div class="rail-title">
+              <span class="rt">Gross margin at the <span id="railBasis">quoted</span> price</span>
+              <span class="rv num" id="railValue">—</span>
+            </div>
+            <div class="rail" id="rail" role="img" aria-label="Margin against the approval gates">
+              <div class="rail-fill" id="railFill" style="width:0%"></div>
+              <div class="rail-tick" id="tickAlt"></div>
+              <div class="rail-tick-label" id="tickAltLabel">30%</div>
+              <div class="rail-tick" id="tickAuto"></div>
+              <div class="rail-tick-label" id="tickAutoLabel">35%</div>
+            </div>
+            <div class="rail-scale"><span>0%</span><span>50%</span></div>
+            <p class="rail-caption" id="railCaption"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="verdictCard">
+        <div class="card-head">
+          <span class="step">Step 3</span>
+          <h2>The call</h2>
+          <span class="note">reasons below are the engine's own words</span>
+        </div>
+        <div class="card-body">
+          <div id="verdict"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="step">Step 4</span>
+          <h2>What goes out</h2>
+          <span class="note">copy as shipped</span>
+        </div>
+        <div class="card-body">
+          <div class="out-grid" id="outbox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="colophon">
+    <p>
+      Engine: <code>site-audit-autopilot.engine.ts</code> bundled verbatim from branch
+      <code>wip/site-audit-autopilot</code> · rules: <code>site-audit-autopilot.rules.json</code> (the same file
+      operations will review) · 35 regression specs green, including the $25k walkthrough on this page.
+      Demo catalog prices/costs are placeholders — in NEXUS they come from your live pricebook. Homeowner and
+      consultant copy shown is the shipped copy; the homeowner text stays admin-editable in Message Management.
+    </p>
+  </footer>
+</div>
+
+<script>
+"use strict";var AutopilotEngine=(()=>{var x=Object.defineProperty;var F=Object.getOwnPropertyDescriptor;var L=Object.getOwnPropertyNames;var E=Object.prototype.hasOwnProperty;var _=(e,t)=>{for(var o in t)x(e,o,{get:t[o],enumerable:!0})},N=(e,t,o,n)=>{if(t&&typeof t=="object"||typeof t=="function")for(let r of L(t))!E.call(e,r)&&r!==o&&x(e,r,{get:()=>t[r],enumerable:!(n=F(t,r))||n.enumerable});return e};var T=e=>N(x({},"__esModule",{value:!0}),e);var te={};_(te,{AUTOPILOT_ADDER_TYPE:()=>q,SITE_AUDIT_AUTOPILOT_DEFAULTS:()=>O,answerAsBoolean:()=>v,answerAsNumber:()=>k,buildProjectProductLine:()=>ee,computeLineTotals:()=>J,computeTotals:()=>X,decide:()=>Q,deriveQuotedAmount:()=>Z,evaluateRules:()=>B,findAnswer:()=>I,findField:()=>C,flattenCaptureAnswers:()=>U,isAutopilotAnswerPresent:()=>R,isAutopilotAuthoredLine:()=>M,normalizeAnswerKey:()=>f,planScopeChanges:()=>z,requiredPriceForMargin:()=>S});var O={enabled:!0,autoApproveMarginPct:35,altMarginPct:30,altMinGrossProfit:2e4,gateBasis:"quoted",blockOnUnknownCost:!0,blockOnUnmappedRule:!0,notifyHomeownerOnAutoApprove:!0,notifyConsultantOnReview:!0,fallbackConsultantName:null,fallbackConsultantEmail:null,fallbackConsultantPhone:null};function f(e){return(e||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}function R(e){return e==null||e===""?!1:Array.isArray(e)?e.length>0:!0}function U(e){var n,r;let t=[],o=new Set;for(let i of e||[]){if(!i||o.has(i))continue;o.add(i);let l=i.field_values;if(l)if(Array.isArray(l.sections))for(let d of l.sections)for(let a of Array.isArray(d==null?void 0:d.fields)?d.fields:[])t.push({fieldId:String((n=a==null?void 0:a.id)!=null?n:""),label:String((r=a==null?void 0:a.label)!=null?r:""),value:a==null?void 0:a.value});else for(let[d,a]of Object.entries(l))t.push({fieldId:d,label:d,value:a})}return t}function I(e,t){let o=Array.isArray(t)?t:[t];for(let n of o){let r=f(n);if(r){for(let i of e)if((f(i.label)===r||f(i.fieldId)===r||i.fieldId===n)&&R(i.value))return i}}}function C(e,t){let o=Array.isArray(t)?t:[t];for(let n of o){let r=f(n);if(r){for(let i of e)if(f(i.label)===r||f(i.fieldId)===r||i.fieldId===n)return i}}}var D=new Set(["yes","true","y","1","checked","on","required","x"]),V=new Set(["no","false","n","0","unchecked","off","not required","none","n a","na"]);function v(e){if(typeof e=="boolean")return e;if(typeof e=="number")return e!==0;let t=f(String(e!=null?e:""));if(D.has(t))return!0;if(V.has(t))return!1}function k(e){if(typeof e=="number"&&Number.isFinite(e))return e;let t=String(e!=null?e:"").replace(/,/g,"").match(/-?\d+(\.\d+)?/);if(!t)return;let o=Number(t[0]);return Number.isFinite(o)?o:void 0}function G(e,t){let o=String(t!=null?t:"");for(let n of e.valueMap||[])try{if(new RegExp(n.match,"i").test(o))return n.value}catch{}return o}function $(e,t,o){var n;if(!e)return!0;if(e.anyOf){let r=f(t);if(!e.anyOf.some(i=>f(i)===r))return!1}if(e.matches)try{if(!new RegExp(e.matches,"i").test(t))return!1}catch{return!1}if(e.truthy!==void 0&&v(o)!==e.truthy)return!1;if(e.min!==void 0||e.max!==void 0||e.gt!==void 0||e.lt!==void 0){let r=(n=k(t))!=null?n:k(o);if(r===void 0||e.min!==void 0&&r<e.min||e.max!==void 0&&r>e.max||e.gt!==void 0&&r<=e.gt||e.lt!==void 0&&r>=e.lt)return!1}return!0}function H(e,t){var o,n;for(let r of e.requires||[]){let i=(o=r.when)!=null&&o.present?C(t,r.captureField):I(t,r.captureField);if(!i||r.when&&!$(r.when,String((n=i.value)!=null?n:""),i.value))return!1}return!0}function K(e,t,o){var i;let n=e.quantity,r=1;if((n==null?void 0:n.fixed)!==void 0)r=n.fixed;else if(n!=null&&n.fromAnswer)r=(i=k(t))!=null?i:1;else if(n!=null&&n.fromField){let l=I(o,n.fromField);r=l&&k(l.value)||1}return(n==null?void 0:n.multiplier)!==void 0&&(r*=n.multiplier),r>0?r:1}function B(e,t){return(e||[]).map(o=>{var l;let n=(l=o.when)!=null&&l.present?C(t,o.captureField):I(t,o.captureField);if(!n)return{rule:o,answered:!1,fired:!1};let r=G(o,n.value),i=$(o.when,r,n.value)&&H(o,t);return{rule:o,answered:!0,fired:i,rawValue:n.value,mappedValue:r,quantity:i?K(o,r,t):void 0}})}function j(e,t){return t.test(e.name||"")||t.test(e.modelNumber||"")}function W(e,t){let o=f(t);if(!o)return!1;let n=f(e.name||""),r=f(e.modelNumber||"");return!!n&&(n.includes(o)||o.includes(n))||!!r&&(r.includes(o)||o.includes(r))}function Y(e,t){var n;if(!e)return!1;if(e.nexusProductId===t.id||e.adderId===t.id||e.auroraId===t.id||((n=e.details)==null?void 0:n.id)===t.id)return!0;let o=f(e.name||"");return!!o&&o===f(t.name||"")}var q="site_audit_autopilot";function M(e){var t;return((t=e==null?void 0:e.details)==null?void 0:t.adder_type)===q}function z(e,t,o){var d,a,b;let n={toAdd:[],unmappedRules:[],unmappedOptionalRules:[],alreadyPresent:[],redFlags:[],warnings:[],hasEquipment:!1},r=t||[],i=new Map;for(let p of e){if(!p.fired)continue;let c=p.rule;if(c.kind==="flag"){let m=c.flagLabel||c.id;(c.severity||"block")==="block"?n.redFlags.push(m):n.warnings.push(m);continue}let u=c.kind==="equipment"?o.products:o.modifiers,s;if(c.catalogFromAnswer)s=u.find(m=>{var P;return W(m,String((P=p.mappedValue)!=null?P:""))});else if(c.catalogMatch){let m=null;try{m=new RegExp(c.catalogMatch,"i")}catch{m=null}s=m?u.find(P=>j(P,m)):void 0}if(!s){let m=Array.isArray(c.captureField)?c.captureField[0]:c.captureField,P={ruleId:c.id,captureField:m,notes:c.notes};c.optional?n.unmappedOptionalRules.push(P):n.unmappedRules.push(P);continue}if(r.find(m=>Y(m,s))){n.alreadyPresent.push({ruleId:c.id,name:s.name});continue}let w=(d=p.quantity)!=null?d:1,g=i.get(s.id);if(g){g.quantity=Math.max(g.quantity,w);continue}i.set(s.id,{ruleId:c.id,kind:c.kind,catalogItemId:s.id,catalogItemName:s.name,quantity:w,unitPriceFallback:(b=(a=s.price)!=null?a:s.basePrice)!=null?b:0,unitCost:s.cost===void 0||s.cost===null?null:s.cost,uom:s.uom||"EA",hasVariablePrice:!!s.hasVariablePrice,productType:s.productType})}for(let p of e){if(!p.fired||!p.rule.suppressCatalogMatch)continue;let c=null;try{c=new RegExp(p.rule.suppressCatalogMatch,"i")}catch{continue}for(let[u,s]of Array.from(i.entries()))c.test(s.catalogItemName)&&s.ruleId!==p.rule.id&&(i.delete(u),n.warnings.push(`${s.catalogItemName} was replaced by rule ${p.rule.id} (not added)`));for(let u of r)!(u!=null&&u.markedOff)&&c.test(String((u==null?void 0:u.name)||""))&&!M(u)&&n.warnings.push(`"${u==null?void 0:u.name}" is on the scope but conflicts with rule ${p.rule.id} \u2014 review and swap it manually (the autopilot never edits human lines)`)}n.toAdd=Array.from(i.values());let l=r.filter(p=>!p.markedOff);return n.hasEquipment=l.some(p=>p.source==="equipment"||p.source==="bom_equipment")||n.toAdd.some(p=>p.kind==="equipment"),n}function J(e,t,o,n,r,i){if(!(n==="PPW"))return{totalPrice:e*o,totalCost:t===null?null:t*o};if(i<=0)return{totalPrice:0,totalCost:null};let a=r==="equipment"||r==="bom_equipment"?i:i*o;return{totalPrice:e*a,totalCost:t===null?null:t*a}}function X(e){let t={computedPrice:0,totalCost:0,costKnown:!0,unknownCostLines:[]};for(let o of e)o.markedOff||(t.computedPrice+=o.totalPrice||0,o.totalCost===null?(t.costKnown=!1,t.unknownCostLines.push(o.name)):t.totalCost+=o.totalCost);return t}function Z(e){var r;let t=e==null?void 0:e.pricing;if(!t)return null;let o=(i,l)=>{let d=typeof i=="number"&&Number.isFinite(i)?i:null,a=typeof l=="number"&&Number.isFinite(l)?l:null;return d!==null&&a!==null?(d+a)/2:d!=null?d:a},n=String((e==null?void 0:e.paymentMethod)||"").toLowerCase();return n==="cash"?o(t.cashLow,t.cashHigh):n==="prepaid"?o(t.prepaidLow,t.prepaidHigh):n==="loan"||n==="ppa"?null:(r=o(t.cashLow,t.cashHigh))!=null?r:o(t.prepaidLow,t.prepaidHigh)}function S(e,t){return t>=100||e<=0?null:e/(1-t/100)}var A=e=>`$${e.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0})}`,h=e=>`${e.toFixed(1)}%`;function Q(e){let{totals:t,quotedAmount:o,settings:n}=e,r=n.gateBasis==="quoted"&&o!==null&&o>0,i=r?o:t.computedPrice,l=r?"quoted":"computed",d=i>0?i-t.totalCost:null,a=i>0&&d!==null?d/i*100:null,b=o!==null?t.computedPrice-o:null,p=S(t.totalCost,n.autoApproveMarginPct),c=!(e.redFlags.length>0||n.blockOnUnmappedRule&&e.unmappedRules.length>0||n.blockOnUnknownCost&&!t.costKnown),u={outcome:"needs_sales_review",gatePrice:i>0?i:null,gateBasisUsed:l,grossProfit:d,marginPct:a,passedGate:null,reasons:[],scopeComplete:c,requiredPriceForAutoApprove:c?p:null,priceDelta:b,quotedAmount:o,computedPrice:t.computedPrice,totalCost:t.totalCost},s=[];for(let g of e.redFlags)s.push(`Red flag from site audit: ${g}`);if(n.blockOnUnmappedRule)for(let g of e.unmappedRules)s.push(`"${g.captureField}" needs a scope item, but no catalog match was found (rule ${g.ruleId})`);if(n.blockOnUnknownCost&&!t.costKnown&&s.push(`Cost unknown for: ${t.unknownCostLines.join(", ")} \u2014 margin cannot be trusted`),e.hasEquipment||s.push("No system equipment on the scope of work"),i<=0&&s.push("Nothing priced \u2014 no quote on file and the scope priced to $0"),s.length>0)return u.reasons=s,c?a!==null&&a>=n.autoApproveMarginPct&&u.reasons.push(`Note: margin ${h(a)} would otherwise auto-approve \u2014 resolve the blockers above and re-run`):(u.reasons.push("The numbers on this run cover the priced scope only \u2014 the flagged work above is not in them, so there is no reliable approval price until a consultant scopes and prices it"),a!==null&&a>=n.autoApproveMarginPct&&u.reasons.push(`Note: the priced portion margins at ${h(a)}, but that is not an approval number while work is missing \u2014 resolve the blockers and re-run`)),u;let y=a,w=d;if(y>=n.autoApproveMarginPct?(u.outcome="auto_approved",u.passedGate="margin",u.reasons=[`Margin ${h(y)} meets the ${h(n.autoApproveMarginPct)} auto-approve floor at the ${l} price of ${A(i)}`]):y>n.altMarginPct&&w>n.altMinGrossProfit?(u.outcome="auto_approved",u.passedGate="high_value",u.reasons=[`Margin ${h(y)} is above ${h(n.altMarginPct)} and gross profit ${A(w)} exceeds ${A(n.altMinGrossProfit)} (high-value gate)`]):(u.reasons=[`Margin ${h(y)} at the ${l} price of ${A(i)} is below the ${h(n.autoApproveMarginPct)} auto-approve floor`],y>n.altMarginPct&&u.reasons.push(`Gross profit ${A(w)} does not clear the ${A(n.altMinGrossProfit)} high-value gate`),p!==null&&u.reasons.push(`Price needed for ${h(n.autoApproveMarginPct)}: ${A(p)}`)),b!==null&&Math.abs(b)>=1){let g=b>0?"above":"below";u.reasons.push(`Real scope prices at ${A(t.computedPrice)} \u2014 ${A(Math.abs(b))} ${g} the ${A(o)} website quote`)}return u}function ee(e,t,o){let n=e.kind==="equipment",r=f(e.productType||""),i=/module|panel/.test(r)?"modules":/batter|storage/.test(r)?"batteries":"other",l=e.hasVariablePrice?0:e.unitPriceFallback;return{adderId:n?void 0:e.catalogItemId,nexusProductId:n?e.catalogItemId:void 0,auroraId:e.catalogItemId,category:n?"Equipment":"System Adder",details:{adder_type:q,component_type:"other",eligible_for_cbi:!0,family:"Site Audit Autopilot",id:e.catalogItemId,isNegative:!1,is_discount:!1,is_hidden:!1,manufacturer_name:"Site Audit Autopilot",pricingOptionName:"Site Audit Autopilot",uniqueKey:`autopilot-${o}-${e.ruleId}`,autopilotRuleId:e.ruleId,autopilotCaptureId:o},isNegative:!1,lineItem:t,name:e.catalogItemName,price:n?0:l,priceType:"fixed",pricingOptionId:`autopilot-${o}-${e.ruleId}`,quantity:e.quantity,source:n?"equipment":"system_adder",totalPrice:n?0:l*e.quantity,type:n?i:"other",markedOff:!1,hasVariablePrice:e.hasVariablePrice,unitOfMeasure:e.uom,uom:e.uom}}return T(te);})();
+
+</script>
+<script>
+'use strict';
+const RULES = ({
+  "$comment": "Site Audit Autopilot mapping rules — capture answer -> scope-of-work action. Same philosophy as material-list-wizard.questions.json: this file is operator-reviewable data, not code. captureField accepts multiple label candidates (matched case/punctuation-insensitively against the Project Design Meeting capture, newest completed captures first). catalogMatch is a case-insensitive regex resolved against nexusModifiers (kind=modifier) or nexusProducts (kind=equipment) names. A fired non-optional rule with no catalog match BLOCKS auto-approve; optional rules degrade to warnings. kind=flag rules never add scope lines: severity 'block' forces sales review, 'warn' is informational. REVIEW: confirm every captureField label against the live Project Design Meeting template and every catalogMatch against the live modifier catalog before enabling.",
+  "version": 1,
+  "rules": [
+    {
+      "id": "msp-brand-forces-mpu",
+      "kind": "modifier",
+      "captureField": ["Main Service Panel Manufacturer/Brand", "MSP Brand", "Main Panel Brand"],
+      "when": { "matches": "zinsco|federal pacific|\\bfpe\\b|sylvania|pushmatic|bulldog" },
+      "catalogMatch": "main panel upgrade|\\bmpu\\b|panel upgrade",
+      "quantity": { "fixed": 1 },
+      "notes": "THE automatic MPU driver (revised 08-14, brand list per Ashton): the auditor does not make the MPU call — that is usually dictated by the finance company — so there is deliberately NO 'MPU required?' capture question. The auditor records the panel brand as a fact, and replace-on-sight brands (Zinsco / Federal Pacific / Sylvania / Pushmatic-Bulldog — NOT Challenger) auto-add the Main Panel Upgrade modifier. A lender-dictated MPU is added by the PM/consultant on the scope as usual — the autopilot never removes human lines and a re-run will not duplicate an MPU that is already there."
+    },
+    {
+      "id": "battery-meter-collar",
+      "kind": "modifier",
+      "captureField": ["Battery Type", "Battery Model", "Battery"],
+      "catalogMatch": "meter collar",
+      "quantity": { "fixed": 1 },
+      "optional": true,
+      "notes": "Battery deals normally carry the meter-collar interconnection cost. Optional (warns instead of blocking if the catalog has no Meter Collar). When the meter-collar-incompatible warning fires, meter-collar-incompatible-pcs SUPPRESSES this line and adds the Power Control System instead."
+    },
+    {
+      "id": "meter-collar-incompatible-pcs",
+      "kind": "modifier",
+      "captureField": ["WARNING: METER COLLAR NOT COMPATIBLE", "Meter Collar Not Compatible", "WARNING - METER COLLAR NOT COMPATIBLE"],
+      "when": { "present": true },
+      "requires": [{ "captureField": ["Battery Type", "Battery Model", "Battery"] }],
+      "catalogMatch": "power control system|\\bpcs\\b",
+      "suppressCatalogMatch": "meter collar",
+      "quantity": { "fixed": 1 },
+      "notes": "Jurisdiction/utility-driven swap: the Project Design Meeting template shows its read-only 'METER COLLAR NOT COMPATIBLE' warning field based on the jurisdiction conditions built into the template, and a shown warning lands in the completed capture's field_values. When that field is present AND the deal includes a battery, the scope gets a Power Control System INSTEAD of the meter collar (the planned collar line is suppressed; a human-added collar line only draws a warning — the autopilot never edits human lines). CONFIRM WITH IT: hidden warning fields must be omitted from submitted field_values for presence-detection to be exact."
+    },
+    {
+      "id": "battery-distance-adder",
+      "kind": "modifier",
+      "captureField": ["Battery Distance", "Battery Distance (ft)", "Distance to Battery Location", "Battery Location Distance from MSP"],
+      "when": { "gt": 50 },
+      "catalogMatch": "battery distance|battery run|distance adder",
+      "quantity": { "fixed": 1 },
+      "notes": "Auditor-measured battery distance strictly greater than 50 ft adds the Battery Distance adder. Confirm the exact capture label and whether pricing should scale per-foot (quantity is 1 flat for now)."
+    },
+    {
+      "id": "roof-two-story",
+      "kind": "modifier",
+      "captureField": ["Roof Height", "Roof height (stories)", "Number of Stories", "Stories"],
+      "valueMap": [
+        { "match": "^\\s*1\\b|one|single", "value": "1" },
+        { "match": "^\\s*2\\b|two", "value": "2" },
+        { "match": "^\\s*3\\b|three", "value": "3" }
+      ],
+      "when": { "anyOf": ["2"] },
+      "catalogMatch": "two story|2 story|second story|roof height",
+      "quantity": { "fixed": 1 },
+      "notes": "Two-story roof adder (extra labor/safety). Uses the same Roof Height capture field the material-list wizard reads."
+    },
+    {
+      "id": "roof-three-story",
+      "kind": "modifier",
+      "captureField": ["Roof Height", "Roof height (stories)", "Number of Stories", "Stories"],
+      "valueMap": [
+        { "match": "^\\s*1\\b|one|single", "value": "1" },
+        { "match": "^\\s*2\\b|two", "value": "2" },
+        { "match": "^\\s*3\\b|three", "value": "3" }
+      ],
+      "when": { "anyOf": ["3"] },
+      "catalogMatch": "three story|3 story|third story",
+      "quantity": { "fixed": 1 },
+      "notes": "Three-story adder. If no such modifier exists in the catalog this rule blocks auto-approve — a 3-story job should see a human anyway."
+    },
+    {
+      "id": "roof-type-tile",
+      "kind": "modifier",
+      "captureField": ["Primary Roof Type We are Installing On", "Primary Roof Type", "Roof Type"],
+      "when": { "matches": "tile|clay|concrete" },
+      "catalogMatch": "tile roof|tile adder|comp[- ]?out",
+      "quantity": { "fixed": 1 },
+      "notes": "Tile roof installation adder (or comp-out). Confirm which modifier OC Solar actually prices for tile."
+    },
+    {
+      "id": "roof-type-metal",
+      "kind": "modifier",
+      "captureField": ["Primary Roof Type We are Installing On", "Primary Roof Type", "Roof Type"],
+      "when": { "matches": "metal|standing seam|corrugated" },
+      "catalogMatch": "metal roof",
+      "quantity": { "fixed": 1 },
+      "notes": "Metal roof adder."
+    },
+    {
+      "id": "roof-type-flat",
+      "kind": "modifier",
+      "captureField": ["Primary Roof Type We are Installing On", "Primary Roof Type", "Roof Type"],
+      "when": { "matches": "flat|torch|tar|foam|rolled" },
+      "catalogMatch": "flat roof|torch down|low slope",
+      "quantity": { "fixed": 1 },
+      "notes": "Flat / torch-down roof adder."
+    },
+    {
+      "id": "multiple-roof-types",
+      "kind": "modifier",
+      "captureField": ["Are there multiple different types of roof types we are installing on?", "Multiple Roof Types"],
+      "when": { "truthy": true },
+      "catalogMatch": "multiple roof|second(ary)? roof|additional roof",
+      "quantity": { "fixed": 1 },
+      "optional": true,
+      "notes": "Optional: if no 'multiple roof types' modifier exists this becomes a warning instead of blocking, since the primary roof adder already carries most of the price."
+    },
+    {
+      "id": "battery-quantity",
+      "kind": "equipment",
+      "captureField": ["Battery Type", "Battery Model", "Battery"],
+      "catalogFromAnswer": true,
+      "quantity": { "fromField": ["Battery Quantity", "Number of Batteries", "Battery Count"] },
+      "optional": true,
+      "notes": "Auditor-confirmed battery model/count becomes an equipment line, matched against nexusProducts by the answer text. Optional because most projects already carry battery lines from the sale; existing lines dedupe by product id/name."
+    },
+    {
+      "id": "module-selection",
+      "kind": "equipment",
+      "captureField": ["Module Type", "Module Model", "Panel Model", "Module"],
+      "catalogFromAnswer": true,
+      "quantity": { "fromField": ["Module Quantity", "Number of Modules", "Panel Count"] },
+      "optional": true,
+      "notes": "Auditor-confirmed module + count. Optional for the same dedupe reason as batteries."
+    },
+    {
+      "id": "underground-service-feed",
+      "kind": "modifier",
+      "captureField": ["Utility Feed", "Service Feed", "Utility Service Feed"],
+      "when": { "matches": "underground" },
+      "catalogMatch": "underground (service|feed)|trench",
+      "quantity": { "fixed": 1 },
+      "optional": true,
+      "notes": "Optional: underground feeds sometimes price as trenching. Degrades to a warning when no matching modifier exists."
+    },
+    {
+      "id": "flag-roof-condition",
+      "kind": "flag",
+      "captureField": ["Roof Condition", "Roof Condition Assessment", "Condition of Roof"],
+      "when": { "matches": "poor|bad|fail|replace|re[- ]?roof|damaged|rotten|leak" },
+      "flagLabel": "Roof condition flagged by auditor — likely re-roof/repair before solar",
+      "severity": "block",
+      "notes": "Hard stop: a compromised roof is exactly the 'absolute mess' case. Routes to a consultant regardless of margin."
+    },
+    {
+      "id": "flag-roof-underlayment",
+      "kind": "flag",
+      "captureField": ["Roof Underlayment Condition", "Underlayment Condition", "Underlayment Paper Condition", "Roof Surface Condition"],
+      "when": { "matches": "poor|bad|fail|replace|brittle|deteriorat|damaged|torn" },
+      "flagLabel": "Roof surface / underlayment paper in poor condition — repair scope unknown",
+      "severity": "block",
+      "notes": "Hard stop: the priced scope cannot include the underlayment/surface repair, so no figure from this run is an approval price. Consultant scopes it with the homeowner first."
+    },
+    {
+      "id": "flag-custom-conduit",
+      "kind": "flag",
+      "captureField": ["Custom Conduit Run Requested", "Custom Conduit Request", "Customer Requested Conduit Route", "Conduit Run Request"],
+      "when": { "truthy": true },
+      "flagLabel": "Custom conduit run requested by homeowner — route must be scoped & priced",
+      "severity": "block",
+      "notes": "Hard stop: custom conduit routing is bespoke work the catalog cannot price. Blocks auto-approve regardless of margin, and suppresses the 'price needed to auto-approve' figure (which would exclude this work)."
+    },
+    {
+      "id": "flag-asbestos-structural",
+      "kind": "flag",
+      "captureField": ["Structural Concerns", "Structural Issues", "Any structural concerns?"],
+      "when": { "truthy": true },
+      "flagLabel": "Structural concern noted by auditor",
+      "severity": "block",
+      "notes": "Hard stop for structural/asbestos style findings."
+    },
+    {
+      "id": "flag-bus-bar-headroom",
+      "kind": "flag",
+      "captureField": ["Electrical Panel Bus Bar Size"],
+      "when": { "max": 125 },
+      "flagLabel": "Bus bar 125A or smaller — verify 120% backfeed headroom / possible MPU",
+      "severity": "warn",
+      "notes": "Informational only: small bus bars usually mean an MPU or derate conversation, but the MPU question above is the pricing driver."
+    }
+  ]
+}).rules;
+const E = window.AutopilotEngine;
+
+/* ---------- demo catalog: placeholder prices/costs (live pricebook in NEXUS) ---------- */
+const CATALOG = {
+  modifiers: [
+    { id: 'mod-mpu',    name: 'Main Panel Upgrade — 200A',   basePrice: 4500, cost: 2200, uom: 'EA' },
+    { id: 'mod-2story', name: 'Two Story Adder',             basePrice: 900,  cost: 300,  uom: 'EA' },
+    { id: 'mod-tile',   name: 'Tile Roof Adder',             basePrice: 1800, cost: 850,  uom: 'EA' },
+    { id: 'mod-metal',  name: 'Metal Roof Adder',            basePrice: 1500, cost: 700,  uom: 'EA' },
+    { id: 'mod-flat',   name: 'Flat Roof / Torch Down Adder',basePrice: 1600, cost: 750,  uom: 'EA' },
+    { id: 'mod-multi',  name: 'Multiple Roof Types Adder',   basePrice: 650,  cost: 250,  uom: 'EA' },
+    { id: 'mod-trench', name: 'Underground Service / Trenching', basePrice: 2400, cost: 1300, uom: 'EA' },
+    { id: 'mod-collar', name: 'Meter Collar', basePrice: 650, cost: 300, uom: 'EA' },
+    { id: 'mod-pcs',    name: 'Power Control System', basePrice: 1800, cost: 900, uom: 'EA' },
+    { id: 'mod-battdist', name: 'Battery Distance Adder', basePrice: 1200, cost: 550, uom: 'EA' },
+    // Deliberately NO "Three Story Adder": set stories = 3 to see the unmapped blocker.
+  ],
+  products: [
+    { id: 'prod-mod',  name: 'Q.PEAK DUO BLK ML-G10+ 400', productType: 'Module',    wattage: 400, price: 520,   cost: 330,  uom: 'EA' },
+    { id: 'prod-mic',  name: 'IQ8M Microinverter',          productType: 'Inverter',              price: 180,   cost: 95,   uom: 'EA' },
+    { id: 'prod-pw3',  name: 'Tesla Powerwall 3',           productType: 'Battery',               price: 12500, cost: 8000, uom: 'EA' },
+  ],
+};
+
+/* Base scope: what the project carries before the audit (sold system). */
+function baseScope(moduleQty) {
+  return [
+    { name: 'Q.PEAK DUO BLK ML-G10+ 400', nexusProductId: 'prod-mod', source: 'equipment', type: 'modules', quantity: moduleQty, price: 0, uom: 'EA' },
+    { name: 'IQ8M Microinverter',          nexusProductId: 'prod-mic', source: 'equipment', type: 'other',   quantity: moduleQty, price: 0, uom: 'EA' },
+    { name: 'Racking & Attachments',       adderId: 'mod-rack', source: 'system_adder', type: 'other', quantity: 1, price: 2000, cost: 1500, uom: 'EA' },
+    { name: 'Permitting & Interconnection',adderId: 'mod-perm', source: 'system_adder', type: 'other', quantity: 1, price: 2100, cost: 1375, uom: 'EA' },
+  ];
+}
+
+/* ---------- form state ---------- */
+const $ = (id) => document.getElementById(id);
+const segs = { 'f-stories': '2', 'f-multi': 'No', 'f-struct': 'No', 'f-conduit': 'No' };
+document.querySelectorAll('.seg').forEach((seg) => {
+  seg.querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const cur = segs[seg.id];
+      segs[seg.id] = cur === btn.dataset.v ? null : btn.dataset.v; // click again to blank the answer
+      paintSegs();
+      run();
+    });
+  });
+});
+function paintSegs() {
+  document.querySelectorAll('.seg').forEach((seg) => {
+    seg.querySelectorAll('button').forEach((btn) => btn.classList.toggle('on', segs[seg.id] === btn.dataset.v));
+  });
+}
+
+/* ---------- capture assembly (nested field_values shape, real labels) ---------- */
+function buildCapture() {
+  const fields = [];
+  const add = (id, label, value) => {
+    if (value === null || value === undefined || value === '') return;
+    fields.push({ id, label, value });
+  };
+  add('brand', 'Main Service Panel Manufacturer/Brand', $('f-brand').value);
+  add('bus', 'Electrical Panel Bus Bar Size', $('f-bus').value ? $('f-bus').value + 'A' : null);
+  add('feed', 'Utility Feed', $('f-feed').value);
+  add('roof', 'Primary Roof Type We are Installing On', $('f-roof').value);
+  add('stories', 'Roof Height', segs['f-stories']);
+  add('cond', 'Roof Condition', $('f-cond').value);
+  add('underlay', 'Roof Underlayment Condition', $('f-underlay').value);
+  add('conduit', 'Custom Conduit Run Requested', segs['f-conduit']);
+  add('multi', 'Are there multiple different types of roof types we are installing on?', segs['f-multi']);
+  add('struct', 'Structural Concerns', segs['f-struct']);
+  add('modtype', 'Module Type', 'Q.PEAK DUO BLK ML-G10+ 400');
+  add('modqty', 'Module Quantity', $('f-modules').value);
+  if ($('f-batt').value !== 'None') {
+    add('batt', 'Battery Type', $('f-batt').value);
+    add('battqty', 'Battery Quantity', $('f-battqty').value);
+    add('battdist', 'Battery Distance', $('f-battdist').value);
+  }
+  // The template's read-only warning field: shown (and therefore present in
+  // the completed capture) only when the jurisdiction conditions fire.
+  if ($('f-utility').value === 'incompatible') {
+    fields.push({ id: 'w-collar', label: 'WARNING: METER COLLAR NOT COMPATIBLE', value: null });
+  }
+  return { id: 5150, project_id: 'DEMO-1234', project_kind: 'project',
+    capture_template: { id: 99, name: 'Project Design Meeting' },
+    field_values: { sections: [{ id: 's1', title: 'Site Audit', order: 1, fields }] } };
+}
+
+/* ---------- pricing (mirrors the orchestrator's priceLine) ---------- */
+function matchCatalogItem(line, pool) {
+  const norm = E.normalizeAnswerKey;
+  return pool.find((item) =>
+    item.id === line.nexusProductId || item.id === line.adderId || item.id === line.auroraId ||
+    (line.details && item.id === line.details.id) ||
+    (item.name && norm(item.name) === norm(String(line.name || ''))));
+}
+function priceLine(line) {
+  const isEquipment = line.source === 'equipment' || line.source === 'bom_equipment';
+  const cat = matchCatalogItem(line, isEquipment ? CATALOG.products : CATALOG.modifiers);
+  const quantity = Number(line.quantity) || 1;
+  const manualPrice = Number(line.price);
+  const catalogPrice = cat ? (cat.price !== undefined ? cat.price : (cat.basePrice || 0)) : 0;
+  const unitPrice = !isEquipment && isFinite(manualPrice) && manualPrice > 0 ? manualPrice : catalogPrice;
+  const manualCost = Number(line.cost);
+  const unitCost = isFinite(manualCost) && manualCost > 0 ? manualCost : (cat && cat.cost !== undefined && cat.cost !== null ? cat.cost : null);
+  const uom = line.uom || (cat && cat.uom) || 'EA';
+  const t = E.computeLineTotals(unitPrice, unitCost, quantity, uom, line.source || '', 0);
+  return { name: String(line.name || (cat && cat.name) || 'Line'), source: line.source || '', quantity,
+    unitPrice, unitCost, totalPrice: t.totalPrice, totalCost: t.totalCost, uom, isPPW: uom === 'PPW',
+    fromAutopilot: E.isAutopilotAuthoredLine(line), markedOff: !!line.markedOff };
+}
+
+/* ---------- settings from the admin panel ---------- */
+function currentSettings() {
+  return Object.assign({}, E.SITE_AUDIT_AUTOPILOT_DEFAULTS, {
+    autoApproveMarginPct: Number($('s-auto').value) || 35,
+    altMarginPct: Number($('s-alt').value) || 30,
+    altMinGrossProfit: Number($('s-gp').value) || 20000,
+    gateBasis: $('s-basis').value,
+  });
+}
+
+/* ---------- rendering helpers ---------- */
+const usd = (v) => v === null || v === undefined ? '—' : (v < 0 ? '−$' : '$') + Math.abs(Math.round(v)).toLocaleString('en-US');
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* ---------- the run ---------- */
+function run(pulse) {
+  const settings = currentSettings();
+  $('collarWarningRow').style.display = $('f-utility').value === 'incompatible' ? 'block' : 'none';
+  const capture = buildCapture();
+  const answers = E.flattenCaptureAnswers([capture]);
+  const evals = E.evaluateRules(RULES, answers);
+  const scope = baseScope(Number($('f-modules').value) || 25);
+  const plan = E.planScopeChanges(evals, scope, CATALOG);
+  const maxLine = scope.length;
+  const newLines = plan.toAdd.map((p, i) => E.buildProjectProductLine(p, maxLine + i + 1, capture.id));
+  const all = scope.concat(newLines);
+  const priced = all.map(priceLine);
+  const totals = E.computeTotals(priced);
+  const method = $('f-pay').value;
+  const q = { paymentMethod: method, pricing: {} };
+  if (method === 'cash') { q.pricing.cashLow = Number($('f-qlow').value) || null; q.pricing.cashHigh = Number($('f-qhigh').value) || null; }
+  if (method === 'prepaid') { q.pricing.prepaidLow = Number($('f-qlow').value) || null; q.pricing.prepaidHigh = Number($('f-qhigh').value) || null; }
+  if (method === 'loan') { q.pricing.loanMonthlyLow = 145; q.pricing.loanMonthlyHigh = 175; }
+  const quotedAmount = E.deriveQuotedAmount(q);
+  const decision = E.decide({ totals, quotedAmount, settings,
+    redFlags: plan.redFlags, unmappedRules: plan.unmappedRules, hasEquipment: plan.hasEquipment });
+
+  renderRules(evals, plan);
+  renderScope(priced, plan);
+  renderTiles(decision, totals);
+  renderRail(decision, settings);
+  renderVerdict(decision, plan);
+  renderOutbox(decision, priced, settings);
+  if (pulse) { const card = $('verdictCard'); card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash'); }
+}
+
+function renderRules(evals, plan) {
+  const chips = [];
+  evals.filter((e) => e.fired).forEach((e) => {
+    const cls = e.rule.kind === 'flag' ? ((e.rule.severity || 'block') === 'block' ? 'flag' : 'warnf') : '';
+    chips.push('<span class="rule-chip ' + cls + '">' + esc(e.rule.id) + '</span>');
+  });
+  $('ruleChips').innerHTML = chips.length
+    ? '<span class="lbl" style="font-size:12px;color:var(--faint);font-weight:600;align-self:center;">Rules fired:</span>' + chips.join('')
+    : '<span class="none">No mapping rules fired — the audit found nothing to add.</span>';
+}
+
+function renderScope(priced, plan) {
+  $('scopeRows').innerHTML = priced.map((l) => {
+    const via = l.fromAutopilot ? '<span class="via">from audit</span>' : '';
+    const cost = l.totalCost === null ? '<span class="cost-na">no cost!</span>' : usd(l.totalCost);
+    return '<tr><td>' + esc(l.name) + via + '</td><td class="r num">' + l.quantity +
+      '</td><td class="r num">' + usd(l.totalPrice) + '</td><td class="r num">' + cost + '</td></tr>';
+  }).join('');
+  const call = [];
+  if (plan.unmappedRules.length) {
+    call.push('<div class="callout bad"><strong>Found on site, but nothing to price it with:</strong><ul>' +
+      plan.unmappedRules.map((r) => '<li>&ldquo;' + esc(r.captureField) + '&rdquo; fired rule <span class="mono">' + esc(r.ruleId) +
+        '</span> — no catalog item matched. Blocks auto-approve until the modifier exists.</li>').join('') + '</ul></div>');
+  }
+  if (plan.alreadyPresent.length) {
+    call.push('<div class="callout warn"><strong>Already on the project (not duplicated):</strong> ' +
+      plan.alreadyPresent.map((a) => esc(a.name) + ' <span class="mono">(' + esc(a.ruleId) + ')</span>').join(' · ') + '</div>');
+  }
+  if (plan.warnings.length) {
+    call.push('<div class="callout warn"><strong>Auditor notes:</strong><ul>' + plan.warnings.map((w) => '<li>' + esc(w) + '</li>').join('') + '</ul></div>');
+  }
+  $('scopeCallouts').innerHTML = call.join('');
+}
+
+function renderTiles(d, totals) {
+  const deltaCls = d.priceDelta === null ? '' : d.priceDelta > 0 ? 'delta-pos' : 'delta-neg';
+  const deltaVal = d.priceDelta === null ? '—' : (d.priceDelta > 0 ? '+' : '') + usd(d.priceDelta).replace('−$', '−$');
+  $('tiles').innerHTML =
+    tile('Website quote', usd(d.quotedAmount), d.quotedAmount === null ? 'monthly-only quote' : 'cash midpoint') +
+    tile('Real scope price', usd(d.computedPrice), 'priced from the catalog') +
+    '<div class="tile ' + deltaCls + '"><div class="t-label">Delta vs quote</div><div class="t-value num">' + deltaVal +
+    '</div><div class="t-sub">' + (d.priceDelta === null ? 'no dollar quote' : d.priceDelta >= 0 ? 'we eat this on auto-approve' : 'priced under the quote') + '</div></div>' +
+    tile('Cost basis', usd(d.totalCost), totals.costKnown ? 'all costs known' : 'MISSING COSTS') +
+    tile('Gross profit', usd(d.grossProfit), 'at the ' + d.gateBasisUsed + ' price');
+  function tile(label, value, sub) {
+    return '<div class="tile"><div class="t-label">' + label + '</div><div class="t-value num">' + value +
+      '</div><div class="t-sub">' + esc(sub) + '</div></div>';
+  }
+}
+
+function renderRail(d, settings) {
+  const MAX = 50;
+  const margin = d.marginPct;
+  $('railBasis').textContent = d.gateBasisUsed;
+  $('railValue').textContent = margin === null ? 'n/a' : margin.toFixed(1) + '%';
+  const fill = $('railFill');
+  const pct = margin === null ? 0 : Math.max(0, Math.min(MAX, margin)) / MAX * 100;
+  fill.style.width = pct + '%';
+  const cls = d.outcome === 'auto_approved' ? '' : (margin !== null && margin > settings.altMarginPct ? 'hold' : 'stop');
+  fill.className = 'rail-fill' + (d.outcome === 'auto_approved' ? '' : cls === 'hold' ? ' hold' : ' stop');
+  $('tickAlt').style.left = (settings.altMarginPct / MAX * 100) + '%';
+  $('tickAltLabel').style.left = (settings.altMarginPct / MAX * 100) + '%';
+  $('tickAltLabel').textContent = settings.altMarginPct + '% + $' + Math.round(settings.altMinGrossProfit / 1000) + 'k GP';
+  $('tickAuto').style.left = (settings.autoApproveMarginPct / MAX * 100) + '%';
+  $('tickAutoLabel').style.left = (settings.autoApproveMarginPct / MAX * 100) + '%';
+  $('tickAutoLabel').textContent = settings.autoApproveMarginPct + '% auto';
+  $('railCaption').textContent = margin === null
+    ? 'No margin to measure — nothing priced.'
+    : d.outcome === 'auto_approved'
+      ? 'Clears the gate' + (d.passedGate === 'high_value' ? ' on the high-value rule (Gate 2).' : ' on the margin floor (Gate 1).')
+      : 'Short of both gates — a consultant gets the numbers instead of an auto-approval.';
+}
+
+function renderVerdict(d, plan) {
+  const isGo = d.outcome === 'auto_approved';
+  const gate = isGo ? (d.passedGate === 'high_value' ? 'Gate 2 · high value' : 'Gate 1 · margin floor') : 'no gate passed';
+  $('verdict').innerHTML =
+    '<div class="verdict ' + (isGo ? 'go' : 'hold') + '">' +
+    '<div class="verdict-line"><span class="verdict-badge">' + (isGo ? '✓' : '☎') + '</span>' +
+    '<h3>' + (isGo ? 'AUTO-APPROVED — straight to design & permitting' : 'SALES REVIEW — consultant gets the call') + '</h3>' +
+    '<span class="gate-tag">' + gate + '</span></div>' +
+    '<ul class="reasons">' + d.reasons.map((r) => '<li>' + esc(r) + '</li>').join('') + '</ul>' +
+    (d.outcome === 'needs_sales_review' && d.requiredPriceForAutoApprove !== null
+      ? '<p style="margin:10px 0 0;font-size:14px;"><strong>Price needed to auto-approve: ' + usd(d.requiredPriceForAutoApprove) + '</strong></p>' : '') +
+    '<p class="engine-note">Reason lines above are returned by the engine verbatim — the same strings land in the NEXUS result dialog and the project activity feed.</p>' +
+    '</div>';
+}
+
+function renderOutbox(d, priced, settings) {
+  const out = [];
+  if (d.outcome === 'auto_approved') {
+    out.push(
+      '<div class="msg-card"><div class="msg-head">✉️ Email — homeowner<span class="to">to: customer</span></div>' +
+      '<div class="msg-body"><div class="subject">OC Solar | Congratulations — your solar project is moving forward!</div>' +
+      '<p>Hi Jordan,</p>' +
+      '<p>Great news — your site audit is complete and your solar project officially qualifies to move forward! Our team confirmed the full scope of your installation on site, which means your project is covered by our <strong>No Change Orders. Ever.</strong> guarantee.</p>' +
+      '<p>Your next step takes just a few minutes: <strong>complete your Welcome Review</strong> in your customer portal — it confirms the details we need to start your building plans and permitting. Your dedicated Project Manager will reach out shortly after.</p>' +
+      '<p><span style="display:inline-block;background:var(--ink);color:var(--paper);padding:8px 12px;border-radius:6px;font-weight:700;font-size:13px;">Complete Your Welcome Review</span> <span style="color:var(--faint);font-size:12px;">→ same customer-portal link as the standard welcome email</span></p></div></div>');
+    out.push(
+      '<div class="msg-card"><div class="msg-head">💬 Text — homeowner<span class="to">admin-editable in Message Management</span></div>' +
+      '<div class="msg-body"><div class="sms-bubble">Hi Jordan, great news! Your site audit is complete and your solar project is approved to move forward. Please complete your Welcome Review here: my-ocsolar-portal.web.app/customer-portal/DEMO-1234. Your Project Manager will reach out shortly. - OC Solar. Reply STOP to opt out.</div></div></div>');
+    out.push('<div class="cadence-note">Also fires cadence event <code>site_audit_auto_approved</code> — attach follow-up cadences in the builder, no code needed. No sales consultant is involved on this path.</div>');
+  } else {
+    const rows = priced.filter((l) => !l.markedOff).map((l) =>
+      '<tr><td>' + esc(l.name) + (l.fromAutopilot ? ' <span class="via">from audit</span>' : '') + '</td><td class="num" style="text-align:right;font-weight:650;">' + usd(l.totalPrice) + '</td></tr>').join('');
+    const incomplete = !d.scopeComplete;
+    const requiredCell = incomplete
+      ? '<span style="color:var(--hold);font-weight:650;">n/a — flagged work is not priced in; scope it first</span>'
+      : usd(d.requiredPriceForAutoApprove);
+    const headsUp = incomplete
+      ? '<p style="color:var(--hold);font-size:12.5px;font-weight:650;">Heads up: every figure above covers the priced scope only. The flagged items (roof condition, custom conduit, etc.) are NOT included — price them with the homeowner before quoting a total.</p>'
+      : '';
+    out.push(
+      '<div class="msg-card"><div class="msg-head">✉️ Email — sales consultant<span class="to">salesRepInfo → “Solar Consultant” contact → fallback</span></div>' +
+      '<div class="msg-body"><div class="subject">Action needed: Jordan Alvarez — site audit priced below auto-approve</div>' +
+      '<table class="mini-numbers"><tr><td>Website quote</td><td class="num">' + usd(d.quotedAmount) + '</td></tr>' +
+      '<tr><td>Real scope price' + (incomplete ? ' (priced portion only)' : '') + '</td><td class="num">' + usd(d.computedPrice) + '</td></tr>' +
+      '<tr><td>Estimated cost</td><td class="num">' + usd(d.totalCost) + '</td></tr>' +
+      '<tr><td>Gross profit @ ' + d.gateBasisUsed + ' price</td><td class="num">' + usd(d.grossProfit) + (d.marginPct !== null ? ' (' + d.marginPct.toFixed(1) + '%)' : '') + '</td></tr>' +
+      '<tr><td><strong>Price needed for ' + settings.autoApproveMarginPct + '%</strong></td><td class="num">' + requiredCell + '</td></tr></table>' +
+      headsUp +
+      '<table class="mini-numbers" style="border-top:1px solid var(--line);padding-top:4px;">' + rows + '</table>' +
+      '<p style="color:var(--muted);font-size:12.5px;">' +
+      (incomplete
+        ? 'Scope and price the flagged work with the homeowner first, then re-run the autopilot. This project will not move to design until it is approved.'
+        : 'Call the homeowner to discuss a slightly increased price or requalification. This project will not move to design until it is approved.') +
+      '</p></div></div>');
+    out.push(
+      '<div class="msg-card"><div class="msg-head">💬 Text — sales consultant</div>' +
+      '<div class="msg-body"><div class="sms-bubble">' +
+      (incomplete
+        ? 'OC Solar: Site audit for Jordan Alvarez needs a sales call — the audit found work the scope can&rsquo;t price yet (see the flags in your email and NEXUS to-do). Scope and price that work with the homeowner before quoting any number.'
+        : 'OC Solar: Site audit for Jordan Alvarez needs a sales call — margin ' +
+          (d.marginPct !== null ? d.marginPct.toFixed(1) + '%' : 'n/a') + ' at the quoted price. Price needed to auto-approve: ' +
+          usd(d.requiredPriceForAutoApprove) + '. Scope + numbers are in your email and NEXUS to-do.') +
+      '</div></div></div>');
+    out.push(
+      '<div class="msg-card"><div class="msg-head">✅ To-do — NEXUS<span class="to">high priority · due tomorrow noon</span></div>' +
+      '<div class="msg-body"><div class="todo-card"><span class="todo-check"></span><div>' +
+      '<div class="t-title">Site Audit Review — call Jordan Alvarez about path forward</div>' +
+      '<div class="t-meta">Assigned to the consultant’s portal account when their email matches one; otherwise role-assigned to Solar Consultants. Created by Site Audit Autopilot.</div>' +
+      '</div></div></div></div>');
+    out.push('<div class="cadence-note">Also fires cadence event <code>site_audit_needs_sales_review</code>.</div>');
+  }
+  $('outbox').innerHTML = out.join('');
+}
+
+/* ---------- scenarios ---------- */
+const BASE_SCENARIO = { brand: 'Zinsco', bus: 200, feed: 'Overhead', conduit: 'No', roof: 'Composition Shingle', stories: '2', cond: 'Good', underlay: 'Good', multi: 'No', struct: 'No', modules: 25, batt: 'None', battqty: 1, battdist: 20, utility: 'compatible', pay: 'cash', qlow: 24000, qhigh: 26000 };
+const SCENARIOS = {
+  walkthrough: Object.assign({}, BASE_SCENARIO),
+  thin:        Object.assign({}, BASE_SCENARIO, { qlow: 20500, qhigh: 22500 }),
+  redflag:     Object.assign({}, BASE_SCENARIO, { cond: 'Poor — needs replacement', underlay: 'Poor — brittle & torn' }),
+  conduit:     Object.assign({}, BASE_SCENARIO, { conduit: 'Yes' }),
+  unmapped:    Object.assign({}, BASE_SCENARIO, { stories: '3' }),
+  highvalue:   Object.assign({}, BASE_SCENARIO, { modules: 40, batt: 'Tesla Powerwall 3', battqty: 2, qlow: 58300, qhigh: 59300 }),
+  pcsswap:     Object.assign({}, BASE_SCENARIO, { modules: 40, batt: 'Tesla Powerwall 3', battqty: 2, qlow: 58300, qhigh: 59300, utility: 'incompatible' }),
+};
+function applyScenario(key) {
+  const s = SCENARIOS[key];
+  segs['f-stories'] = s.stories; segs['f-multi'] = s.multi; segs['f-struct'] = s.struct; segs['f-conduit'] = s.conduit;
+  $('f-brand').value = s.brand; $('f-bus').value = s.bus; $('f-feed').value = s.feed;
+  $('f-roof').value = s.roof; $('f-cond').value = s.cond; $('f-underlay').value = s.underlay;
+  $('f-modules').value = s.modules; $('f-batt').value = s.batt; $('f-battqty').value = s.battqty;
+  $('f-battdist').value = s.battdist; $('f-utility').value = s.utility;
+  $('f-pay').value = s.pay; $('f-qlow').value = s.qlow; $('f-qhigh').value = s.qhigh;
+  document.querySelectorAll('#scenarios .chip').forEach((c) => c.classList.toggle('active', c.dataset.scenario === key));
+  paintSegs();
+  run(true);
+}
+document.querySelectorAll('#scenarios .chip').forEach((chip) =>
+  chip.addEventListener('click', () => applyScenario(chip.dataset.scenario)));
+
+/* ---------- live wiring ---------- */
+['f-brand','f-bus','f-feed','f-roof','f-cond','f-underlay','f-modules','f-batt','f-battqty','f-battdist','f-utility','f-pay','f-qlow','f-qhigh','s-auto','s-alt','s-gp','s-basis']
+  .forEach((id) => $(id).addEventListener('input', () => run(false)));
+$('runBtn').addEventListener('click', () => { run(true); $('verdictCard').scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+
+applyScenario('walkthrough');
+</script>
+
+</html>
